@@ -10,11 +10,12 @@ export interface CampaignGroup {
 }
 
 const SEVERITY_ORDER = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const;
+type SeverityLevel = (typeof SEVERITY_ORDER)[number];
 
 const sortBySeverity = (anomalies: ValidatedAnomaly[]): ValidatedAnomaly[] => {
   return [...anomalies].sort((a, b) => {
-    const aIndex = SEVERITY_ORDER.indexOf(a.severity);
-    const bIndex = SEVERITY_ORDER.indexOf(b.severity);
+    const aIndex = SEVERITY_ORDER.indexOf(a.severity as SeverityLevel);
+    const bIndex = SEVERITY_ORDER.indexOf(b.severity as SeverityLevel);
     return aIndex - bIndex;
   });
 };

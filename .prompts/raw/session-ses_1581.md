@@ -2652,7 +2652,8 @@ Again, forgot to change to the frontend directory.
 > tsc -b && vite build
 
 [36mvite v8.0.16 [32mbuilding client environment for production...[36m[39m
-[2Ktransforming...✓ 106 modules transformed.
+[2K
+transforming...✓ 106 modules transformed.
 rendering chunks...
 computing gzip size...
 dist/index.html                   0.45 kB │ gzip:   0.29 kB
@@ -3088,13 +3089,11 @@ messages: [
 #### Main `.env` file:
 **File:** `/mnt/c/Users/sotov/OneDrive/Escritorio/profasee/.env`
 ```
-ANTHROPIC_API_KEY= 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
 ```
 
 #### Backend `.env` file:
 **File:** `/mnt/c/Users/sotov/OneDrive/Escritorio/profasee/src/backend/.env`
 ```
-ANTHROPIC_API_KEY= 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
 ```
 
 #### `.env.example` (template):
@@ -6331,7 +6330,8 @@ Now let me build the frontend again to check if it compiles.
 > tsc -b && vite build
 
 [36mvite v8.0.16 [32mbuilding client environment for production...[36m[39m
-[2Ktransforming...✓ 106 modules transformed.
+[2K
+transforming...✓ 106 modules transformed.
 rendering chunks...
 computing gzip size...
 dist/index.html                   0.45 kB │ gzip:   0.29 kB

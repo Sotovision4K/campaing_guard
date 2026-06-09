@@ -13,7 +13,7 @@ interface AnomalyCardProps {
 }
 
 export const AnomalyCard = ({ anomaly, isExpanded, onToggle, onAction }: AnomalyCardProps) => {
-  const [actionStatus, setActionStatus] = useState<{ type: AnomalyAction; done: boolean } | null>(null);
+  const [actionStatus, setActionStatus] = useState<{ done: boolean } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const confidencePercent = Math.round(anomaly.confidence * 100);
@@ -22,7 +22,9 @@ export const AnomalyCard = ({ anomaly, isExpanded, onToggle, onAction }: Anomaly
     setIsLoading(true);
     try {
       await onAction(anomaly.id, action);
-      setActionStatus({ type: action, done: true });
+      setActionStatus({ done: true });
+    } catch {
+      // error handling delegated to caller
     } finally {
       setIsLoading(false);
     }
