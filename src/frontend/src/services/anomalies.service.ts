@@ -89,6 +89,28 @@ export const approveAnomaly = async (
   return response.data;
 };
 
+export const increaseBid = async (
+  id: string,
+  percent?: number
+): Promise<ApiResponse<{ anomaly_id: string; action: string; percent: number }>> => {
+  const response = await apiClient.post<ApiResponse<{ anomaly_id: string; action: string; percent: number }>>(
+    `/anomaly/${id}/increase-bid`,
+    { percent }
+  );
+  return response.data;
+};
+
+export const lowerBid = async (
+  id: string,
+  percent?: number
+): Promise<ApiResponse<{ anomaly_id: string; action: string; percent: number }>> => {
+  const response = await apiClient.post<ApiResponse<{ anomaly_id: string; action: string; percent: number }>>(
+    `/anomaly/${id}/lower-bid`,
+    { percent }
+  );
+  return response.data;
+};
+
 export const listAuditLogs = async (
   filters?: {
     anomalyId?: string;

@@ -3,6 +3,11 @@ import { useAnomalies } from '../../hooks/useAnomalies';
 import type { Anomaly } from '../../services/anomalies.service';
 import './index.css';
 
+interface ActionFeedback {
+  type: 'success' | 'error';
+  message: string;
+}
+
 export const AnomaliesPage = () => {
   const {
     status,
@@ -14,22 +19,28 @@ export const AnomaliesPage = () => {
     selectAnomaly,
     reject,
     approve,
+    increaseBid,
+    lowerBid,
     clearSelection,
   } = useAnomalies();
 
   const [filterSeverity, setFilterSeverity] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
+  const [filterCampaign, setFilterCampaign] = useState<string>('');
   const [actionReason, setActionReason] = useState('');
+  const [feedback, setFeedback] = useState<ActionFeedback | null>(null);
 
   useEffect(() => {
     fetchAnomalies({
+      campaignId: filterCampaign || undefined,
       severity: filterSeverity || undefined,
       status: filterStatus || undefined,
     });
-  }, [filterSeverity, filterStatus, fetchAnomalies]);
+  }, [filterSeverity, filterStatus, filterCampaign, fetchAnomalies]);
 
   const handleSelectAnomaly = async (id: string) => {
     setActionReason('');
+    setFeedback(null);
     await selectAnomaly(id);
   };
 
@@ -37,12 +48,26 @@ export const AnomaliesPage = () => {
     if (!selectedAnomaly) return;
     await reject(selectedAnomaly.anomaly.anomaly_id, actionReason || 'User rejected as false positive.');
     setActionReason('');
+    setFeedback({ type: 'success', message: 'Anomaly rejected. DONE!' });
   };
 
   const handleApprove = async () => {
     if (!selectedAnomaly) return;
     await approve(selectedAnomaly.anomaly.anomaly_id, actionReason || 'User approved anomaly.');
     setActionReason('');
+    setFeedback({ type: 'success', message: 'Anomaly approved. DONE!' });
+  };
+
+  const handleIncreaseBid = async () => {
+    if (!selectedAnomaly) return;
+    await increaseBid(selectedAnomaly.anomaly.anomaly_id);
+    setFeedback({ type: 'success', message: 'Bid increased. DONE!' });
+  };
+
+  const handleLowerBid = async () => {
+    if (!selectedAnomaly) return;
+    await lowerBid(selectedAnomaly.anomaly.anomaly_id);
+    setFeedback({ type: 'success', message: 'Bid lowered. DONE!' });
   };
 
   const severityColor: Record<string, string> = {
@@ -52,6 +77,8 @@ export const AnomaliesPage = () => {
     LOW: 'severity-low',
   };
 
+  const campaigns = [...new Set(anomalies.map(a => a.campaign_id))].sort();
+
   return (
     <div className="anomalies-page">
       <header className="anomalies-page__header">
@@ -60,6 +87,16 @@ export const AnomaliesPage = () => {
       </header>
 
       <div className="anomalies-page__filters">
+        <select
+          value={filterCampaign}
+          onChange={(e) => setFilterCampaign(e.target.value)}
+          aria-label="Filter by campaign"
+        >
+          <option value="">All Campaigns</option>
+          {campaigns.map((campaign) => (
+            <option key={campaign} value={campaign}>{campaign}</option>
+          ))}
+        </select>
         <select
           value={filterSeverity}
           onChange={(e) => setFilterSeverity(e.target.value)}
@@ -149,6 +186,11 @@ export const AnomaliesPage = () => {
 
             <div className="detail-actions">
               <h3>Action</h3>
+              {feedback && (
+                <div className={`action-feedback action-feedback--${feedback.type}`}>
+                  {feedback.message}
+                </div>
+              )}
               <textarea
                 placeholder="Reason for action..."
                 value={actionReason}
@@ -163,7 +205,7 @@ export const AnomaliesPage = () => {
                   onClick={handleReject}
                   disabled={status === 'action-loading'}
                 >
-                  Reject (False Positive)
+                  Reject
                 </button>
                 <button
                   className="btn btn--approve"
@@ -171,6 +213,23 @@ export const AnomaliesPage = () => {
                   disabled={status === 'action-loading'}
                 >
                   Approve
+                </button>
+              </div>
+
+              <div className="action-buttons action-buttons--bid">
+                <button
+                  className="btn btn--increase-bid"
+                  onClick={handleIncreaseBid}
+                  disabled={status === 'action-loading'}
+                >
+                  Increase Bid
+                </button>
+                <button
+                  className="btn btn--lower-bid"
+                  onClick={handleLowerBid}
+                  disabled={status === 'action-loading'}
+                >
+                  Lower Bid
                 </button>
               </div>
             </div>

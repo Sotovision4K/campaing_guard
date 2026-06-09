@@ -6,6 +6,8 @@ import {
   getAnomaly,
   rejectAnomaly,
   approveAnomaly,
+  increaseBid,
+  lowerBid,
   listAuditLogs,
 } from '../controllers/anomaly.controller.js';
 
@@ -33,6 +35,12 @@ router.post('/:id/reject', rejectAnomaly);
 
 // Approve anomaly (acknowledge)
 router.post('/:id/approve', approveAnomaly);
+
+// Increase bid action
+router.post('/:id/increase-bid', increaseBid);
+
+// Lower bid action
+router.post('/:id/lower-bid', lowerBid);
 
 // Audit logs
 router.get('/audit-logs', listAuditLogs);

@@ -36,12 +36,15 @@ export const useUpload = () => {
         error: null,
       });
 
-      // If cached, briefly show the waiting state, then redirect to anomalies
+      // If cached, briefly show the waiting state, then redirect to insights with data
       if (isCached) {
         setState((prev) => ({ ...prev, status: 'waiting' }));
         setTimeout(() => {
-          navigate('/anomalies');
+          navigate('/insights', { state: { uploadData: response.data } });
         }, 1500);
+      } else {
+        // For new uploads, redirect immediately to insights with the data
+        navigate('/insights', { state: { uploadData: response.data } });
       }
 
       return response;

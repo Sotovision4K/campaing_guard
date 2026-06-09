@@ -316,8 +316,86 @@ export const approveAnomaly = async (
 
     res.status(200).json({
       success: true,
-      message: 'Anomaly approved.',
+      message: 'Anomaly approved. DONE!',
       data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Increase bid action (mock endpoint)
+export const increaseBid = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    await ensureDb();
+
+    const { id } = req.params;
+    const { percent } = req.body;
+
+    const anomaly = await findAnomalyById(id);
+    if (!anomaly) {
+      throw new NotFoundError(`Anomaly with id ${id} not found`);
+    }
+
+    await createAuditLog({
+      report_id: anomaly.report_id,
+      anomaly_id: id,
+      action: 'increase_bid',
+      actor: req.headers['x-user-id'] as string || 'anonymous',
+      meta: {
+        percent: percent || 10,
+        message: `Bid increased by ${percent || 10}%. DONE!`,
+        previousStatus: anomaly.status,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Bid increased. DONE!',
+      data: { anomaly_id: id, action: 'increase_bid', percent: percent || 10 },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Lower bid action (mock endpoint)
+export const lowerBid = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    await ensureDb();
+
+    const { id } = req.params;
+    const { percent } = req.body;
+
+    const anomaly = await findAnomalyById(id);
+    if (!anomaly) {
+      throw new NotFoundError(`Anomaly with id ${id} not found`);
+    }
+
+    await createAuditLog({
+      report_id: anomaly.report_id,
+      anomaly_id: id,
+      action: 'lower_bid',
+      actor: req.headers['x-user-id'] as string || 'anonymous',
+      meta: {
+        percent: percent || 10,
+        message: `Bid lowered by ${percent || 10}%. DONE!`,
+        previousStatus: anomaly.status,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Bid lowered. DONE!',
+      data: { anomaly_id: id, action: 'lower_bid', percent: percent || 10 },
     });
   } catch (error) {
     next(error);

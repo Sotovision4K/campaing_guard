@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { listAnomalies, getAnomaly, rejectAnomaly, approveAnomaly } from '../services/anomalies.service';
+import { listAnomalies, getAnomaly, rejectAnomaly, approveAnomaly, increaseBid, lowerBid } from '../services/anomalies.service';
 import type { Anomaly, AnomalyDetailResponse } from '../services/anomalies.service';
 import type { ApiError } from '../api/client';
 
@@ -121,12 +121,56 @@ export const useAnomalies = () => {
     }));
   }, []);
 
+  const increaseBidAction = useCallback(async (id: string, percent?: number) => {
+    setState((prev) => ({ ...prev, status: 'action-loading' }));
+    try {
+      await increaseBid(id, percent);
+      const response = await getAnomaly(id);
+      setState((prev) => ({
+        ...prev,
+        status: 'success',
+        selectedAnomaly: response.data,
+        error: null,
+      }));
+    } catch (error) {
+      const apiError = error as ApiError;
+      setState((prev) => ({
+        ...prev,
+        status: 'error',
+        error: apiError.message || 'Failed to increase bid',
+      }));
+    }
+  }, []);
+
+  const lowerBidAction = useCallback(async (id: string, percent?: number) => {
+    setState((prev) => ({ ...prev, status: 'action-loading' }));
+    try {
+      await lowerBid(id, percent);
+      const response = await getAnomaly(id);
+      setState((prev) => ({
+        ...prev,
+        status: 'success',
+        selectedAnomaly: response.data,
+        error: null,
+      }));
+    } catch (error) {
+      const apiError = error as ApiError;
+      setState((prev) => ({
+        ...prev,
+        status: 'error',
+        error: apiError.message || 'Failed to lower bid',
+      }));
+    }
+  }, []);
+
   return {
     ...state,
     fetchAnomalies,
     selectAnomaly,
     reject,
     approve,
+    increaseBid: increaseBidAction,
+    lowerBid: lowerBidAction,
     clearSelection,
   };
 };

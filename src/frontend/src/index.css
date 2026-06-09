@@ -11,6 +11,22 @@
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
+  --color-text-primary: var(--text-h);
+  --color-text-secondary: var(--text);
+  --color-background: var(--bg);
+  --color-surface: var(--bg);
+  --color-surface-hover: var(--social-bg);
+  --color-border: var(--border);
+
+  --color-critical: #dc2626;
+  --color-critical-bg: rgba(220, 38, 38, 0.1);
+  --color-high: #ea580c;
+  --color-high-bg: rgba(234, 88, 12, 0.1);
+  --color-medium: #ca8a04;
+  --color-medium-bg: rgba(202, 138, 4, 0.1);
+  --color-low: #16a34a;
+  --color-low-bg: rgba(22, 163, 74, 0.1);
+
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
@@ -43,6 +59,22 @@
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+
+    --color-text-primary: var(--text-h);
+    --color-text-secondary: var(--text);
+    --color-background: var(--bg);
+    --color-surface: #1e2028;
+    --color-surface-hover: rgba(255, 255, 255, 0.05);
+    --color-border: var(--border);
+
+    --color-critical: #f87171;
+    --color-critical-bg: rgba(248, 113, 113, 0.15);
+    --color-high: #fb923c;
+    --color-high-bg: rgba(251, 146, 60, 0.15);
+    --color-medium: #facc15;
+    --color-medium-bg: rgba(250, 204, 21, 0.15);
+    --color-low: #4ade80;
+    --color-low-bg: rgba(74, 222, 128, 0.15);
   }
 
   #social .button-icon {
@@ -108,4 +140,40 @@ code {
   line-height: 135%;
   padding: 4px 8px;
   background: var(--code-bg);
+}
+
+.severity-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.severity-badge--sm {
+  padding: 1px 6px;
+  font-size: 0.7rem;
+}
+
+.severity-badge.severity-critical {
+  background: var(--color-critical-bg);
+  color: var(--color-critical);
+}
+
+.severity-badge.severity-high {
+  background: var(--color-high-bg);
+  color: var(--color-high);
+}
+
+.severity-badge.severity-medium {
+  background: var(--color-medium-bg);
+  color: var(--color-medium);
+}
+
+.severity-badge.severity-low {
+  background: var(--color-low-bg);
+  color: var(--color-low);
 }
