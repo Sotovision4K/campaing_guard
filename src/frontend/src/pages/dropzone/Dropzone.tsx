@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useDropzone, type FileRejection } from 'react-dropzone';
-import './Dropzone.css';
+import styles from '../../styles/dropzone.module.css';
 
 interface DropzoneProps {
   onFileSelect: (file: File) => void;
@@ -15,7 +15,7 @@ export const Dropzone = ({ onFileSelect, disabled = false }: DropzoneProps) => {
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
       setRejectionError(null);
-      
+
       if (rejectedFiles.length > 0) {
         const rejection = rejectedFiles[0];
         const error = rejection.errors[0];
@@ -40,18 +40,26 @@ export const Dropzone = ({ onFileSelect, disabled = false }: DropzoneProps) => {
     disabled,
   });
 
+  const dropzoneClassName = [
+    styles.dropzone,
+    isDragActive && styles.dropzoneActive,
+    disabled && styles.dropzoneDisabled,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <div
       {...getRootProps()}
-      className={`dropzone ${isDragActive ? 'dropzone--active' : ''} ${disabled ? 'dropzone--disabled' : ''}`}
+      className={dropzoneClassName}
       role="button"
       aria-label="Upload CSV file"
       tabIndex={0}
     >
       <input {...getInputProps()} aria-label="File input" />
-      <div className="dropzone__content">
+      <div className={styles.dropzoneContent}>
         <svg
-          className="dropzone__icon"
+          className={styles.dropzoneIcon}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -63,17 +71,17 @@ export const Dropzone = ({ onFileSelect, disabled = false }: DropzoneProps) => {
           <line x1="12" y1="3" x2="12" y2="15" />
         </svg>
         {isDragActive ? (
-          <p className="dropzone__text">Drop the CSV file here...</p>
+          <p className={styles.dropzoneText}>Drop the CSV file here...</p>
         ) : (
           <>
-            <p className="dropzone__text">
+            <p className={styles.dropzoneText}>
               Drag & drop a CSV file here, or click to select
             </p>
-            <p className="dropzone__hint">Maximum file size: 10MB</p>
+            <p className={styles.dropzoneHint}>Maximum file size: 10MB</p>
           </>
         )}
         {rejectionError && (
-          <p className="dropzone__error" role="alert">
+          <p className={styles.dropzoneError} role="alert">
             {rejectionError}
           </p>
         )}

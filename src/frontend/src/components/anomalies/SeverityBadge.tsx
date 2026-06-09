@@ -2,6 +2,11 @@ import type { ValidatedAnomaly } from '../../types';
 
 type Severity = ValidatedAnomaly['severity'];
 
+interface SeverityBadgeProps {
+  severity: Severity;
+  size?: 'sm' | 'md';
+}
+
 const severityClass: Record<Severity, string> = {
   CRITICAL: 'severity-critical',
   HIGH: 'severity-high',

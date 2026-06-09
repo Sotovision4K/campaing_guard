@@ -1,16 +1,23 @@
-import './UploadProgress.css';
+import styles from '../../styles/dropzone.module.css';
 
 interface UploadProgressProps {
   progress: number;
   fileName: string;
+  fileSize?: number;
 }
 
-export const UploadProgress = ({ progress, fileName }: UploadProgressProps) => {
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+export const UploadProgress = ({ progress, fileName, fileSize }: UploadProgressProps) => {
   return (
-    <div className="upload-progress">
-      <div className="upload-progress__file">
+    <div className={styles.processingCard}>
+      <div className={styles.processingHeader}>
         <svg
-          className="upload-progress__icon"
+          className={styles.processingIcon}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -21,15 +28,21 @@ export const UploadProgress = ({ progress, fileName }: UploadProgressProps) => {
           <line x1="16" y1="13" x2="8" y2="13" />
           <line x1="16" y1="17" x2="8" y2="17" />
         </svg>
-        <span className="upload-progress__filename">{fileName}</span>
+        <span className={styles.processingFilename}>{fileName}</span>
+        {fileSize && (
+          <span className={styles.processingSize}>{formatFileSize(fileSize)}</span>
+        )}
       </div>
-      <div className="upload-progress__bar-container">
+      <div className={styles.progressBar}>
         <div
-          className="upload-progress__bar"
+          className={styles.progressBarFill}
           style={{ width: `${progress}%` }}
         />
       </div>
-      <span className="upload-progress__percentage">{progress}%</span>
+      <div className={styles.progressBarText}>
+        <span>Uploading...</span>
+        <span>{progress}%</span>
+      </div>
     </div>
   );
 };

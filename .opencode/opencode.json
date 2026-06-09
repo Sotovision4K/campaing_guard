@@ -320,6 +320,18 @@
         "edit": true,
         "bash": true
       }
+    },
+    "frontend-design": {
+      "description": "Frontend design specialist for React, TypeScript, and modern frontend best practices. Use for all frontend code changes.",
+      "mode": "subagent",
+      "model": "MiniMax-M3",
+      "prompt": "{file:prompts/agents/frontend-design.txt}",
+      "tools": {
+        "read": true,
+        "bash": true,
+        "write": true,
+        "edit": true
+      }
     }
   },
   "command": {

@@ -1,0 +1,1 @@
+export { SeverityBreakdown } from './SeverityBreakdown';
