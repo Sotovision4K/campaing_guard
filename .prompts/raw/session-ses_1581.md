@@ -3084,22 +3084,7 @@ messages: [
 
 ---
 
-### 5. Environment Variables / Config Files Related to LLM
 
-#### Main `.env` file:
-**File:** `/mnt/c/Users/sotov/OneDrive/Escritorio/profasee/.env`
-```
-```
-
-#### Backend `.env` file:
-**File:** `/mnt/c/Users/sotov/OneDrive/Escritorio/profasee/src/backend/.env`
-```
-```
-
-#### `.env.example` (template):
-**File:** `/mnt/c/Users/sotov/OneDrive/Escritorio/profasee/.env.example`
-```
-# No ANTHROPIC_API_KEY defined here (placeholder)
 ```
 
 #### Docker Compose debug override:
