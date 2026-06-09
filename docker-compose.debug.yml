@@ -1,0 +1,30 @@
+# Docker Compose override for development & debugging
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.debug.yml up --build
+#
+# The backend service is overridden to:
+# - Use Dockerfile.dev (includes devDependencies + tsx)
+# - Start with Node --inspect bound to 0.0.0.0:9229
+# - Map port 9229 to your host so VS Code / Chrome DevTools can attach
+
+services:
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "${API_PORT:-3001}:8080"
+      - "9229:9229"
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      NODE_ENV: .env
+      PORT: 8080
+      CHOKIDAR_USEPOLLING: "true"
+    # Override the production CMD to enable the V8 inspector + hot reload
+    command: npx tsx watch --inspect=0.0.0.0:9229 src/app.ts
+    # Ensure source maps resolve correctly inside the container
+    # tsx generates inline source maps by default, but explicit mapping helps.
+    volumes:
+      - ./src/backend/src:/app/src
+      - ./src/backend/tsconfig.json:/app/tsconfig.json
+      - ./src/backend/package.json:/app/package.json

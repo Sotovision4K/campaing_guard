@@ -1,0 +1,47 @@
+.upload-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.upload-progress__file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.upload-progress__icon {
+  width: 20px;
+  height: 20px;
+  color: #666;
+}
+
+.upload-progress__filename {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+.upload-progress__bar-container {
+  width: 100%;
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.upload-progress__bar {
+  height: 100%;
+  background-color: #2196f3;
+  border-radius: 4px;
+  transition: width 0.2s ease;
+}
+
+.upload-progress__percentage {
+  font-size: 12px;
+  color: #666;
+  text-align: right;
+}

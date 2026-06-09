@@ -1,0 +1,6 @@
+{
+	"dependencies": {
+		"dotenv": "^17.4.2",
+		"ecc-universal": "^1.10.0"
+	}
+}

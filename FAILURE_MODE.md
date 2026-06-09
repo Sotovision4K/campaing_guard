@@ -11,3 +11,6 @@
 
 - Insights needs to be audit before providing the info to the user. We could set another agent that review the response, this is actually expensier than only one LLM providing insights but it's a trade off for better response. Also it needs consistency, all insights needs to be the same with the same datasets.
 
+- For larger user based this is going to fail. We need to add queues to decouple the calculation and detection logic. That way we could deload the endpoint. 
+
+- There no rate limiting, any malicious attacket can ddos this endpoint

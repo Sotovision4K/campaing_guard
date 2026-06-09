@@ -1,0 +1,64 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: profasee-db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${DB_NAME:-profasee}
+      POSTGRES_USER: ${DB_USER:-profasee_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-profasee_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - profasee-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-profasee_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: profasee-api
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${API_PORT:-3001}:8080"
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: 8080
+      DATABASE_URL: postgresql://${DB_USER:-profasee_user}:${DB_PASSWORD:-profasee_password}@postgres:5432/${DB_NAME:-profasee}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-profasee}
+      DB_USER: ${DB_USER:-profasee_user}
+      DB_PASSWORD: ${DB_PASSWORD:-profasee_password}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src/backend/src:/app/src
+      - ./src/backend/tsconfig.json:/app/tsconfig.json
+    networks:
+      - profasee-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  profasee-network:
+    driver: bridge
