@@ -4,7 +4,7 @@ import { runPipeline } from '../services/pipeline.service.js';
 import { computeFileHash } from '../utils/hash.js';
 import { ValidationError, FileProcessingError, NotFoundError } from '../middleware/errors.js';
 import { initDatabase } from '../db/index.js';
-import { createReport, findReportByHash, findReportById, updateReportStatus } from '../db/repositories/report.repository.js';
+import { createReport, findReportByHash } from '../db/repositories/report.repository.js';
 import { createAnomaly, findAnomaliesByReportId, findAnomalyById, updateAnomalyStatus, getAnomaliesWithPagination } from '../db/repositories/anomaly.repository.js';
 import { createAuditLog, findAuditLogsByAnomalyId, getAuditLogsWithPagination } from '../db/repositories/audit-log.repository.js';
 import type { ValidatedAnomaly } from '../interfaces/pipeline.interface.js';
@@ -324,7 +324,7 @@ export const approveAnomaly = async (
   }
 };
 
-// Increase bid action (mock endpoint)
+// Increase bid action — persists user selection as 'investigating' + audit log
 export const increaseBid = async (
   req: Request,
   res: Response,
@@ -335,11 +335,14 @@ export const increaseBid = async (
 
     const { id } = req.params;
     const { percent } = req.body;
+    const pct = typeof percent === 'number' && percent > 0 ? percent : 10;
 
     const anomaly = await findAnomalyById(id);
     if (!anomaly) {
       throw new NotFoundError(`Anomaly with id ${id} not found`);
     }
+
+    const updated = await updateAnomalyStatus(id, 'investigating');
 
     await createAuditLog({
       report_id: anomaly.report_id,
@@ -347,23 +350,24 @@ export const increaseBid = async (
       action: 'increase_bid',
       actor: req.headers['x-user-id'] as string || 'anonymous',
       meta: {
-        percent: percent || 10,
-        message: `Bid increased by ${percent || 10}%. DONE!`,
+        percent: pct,
+        message: `Bid increased by ${pct}%. DONE!`,
         previousStatus: anomaly.status,
+        newStatus: 'investigating',
       },
     });
 
     res.status(200).json({
       success: true,
       message: 'Bid increased. DONE!',
-      data: { anomaly_id: id, action: 'increase_bid', percent: percent || 10 },
+      data: updated,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Lower bid action (mock endpoint)
+// Lower bid action — persists user selection as 'investigating' + audit log
 export const lowerBid = async (
   req: Request,
   res: Response,
@@ -374,11 +378,14 @@ export const lowerBid = async (
 
     const { id } = req.params;
     const { percent } = req.body;
+    const pct = typeof percent === 'number' && percent > 0 ? percent : 10;
 
     const anomaly = await findAnomalyById(id);
     if (!anomaly) {
       throw new NotFoundError(`Anomaly with id ${id} not found`);
     }
+
+    const updated = await updateAnomalyStatus(id, 'investigating');
 
     await createAuditLog({
       report_id: anomaly.report_id,
@@ -386,16 +393,79 @@ export const lowerBid = async (
       action: 'lower_bid',
       actor: req.headers['x-user-id'] as string || 'anonymous',
       meta: {
-        percent: percent || 10,
-        message: `Bid lowered by ${percent || 10}%. DONE!`,
+        percent: pct,
+        message: `Bid lowered by ${pct}%. DONE!`,
         previousStatus: anomaly.status,
+        newStatus: 'investigating',
       },
     });
 
     res.status(200).json({
       success: true,
       message: 'Bid lowered. DONE!',
-      data: { anomaly_id: id, action: 'lower_bid', percent: percent || 10 },
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Bulk action: approve / reject a list of anomalies in one call
+export const bulkAction = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    await ensureDb();
+
+    const { ids, action, reason } = req.body as {
+      ids: unknown;
+      action: unknown;
+      reason?: string;
+    };
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new ValidationError('`ids` must be a non-empty array');
+    }
+    if (action !== 'approved' && action !== 'rejected') {
+      throw new ValidationError('`action` must be either "approved" or "rejected"');
+    }
+
+    const actor = (req.headers['x-user-id'] as string) || 'anonymous';
+    const updated: unknown[] = [];
+    const skipped: string[] = [];
+
+    for (const id of ids) {
+      if (typeof id !== 'string') {
+        skipped.push(String(id));
+        continue;
+      }
+      const anomaly = await findAnomalyById(id);
+      if (!anomaly) {
+        skipped.push(id);
+        continue;
+      }
+      const result = await updateAnomalyStatus(id, action);
+      if (result) updated.push(result);
+      await createAuditLog({
+        report_id: anomaly.report_id,
+        anomaly_id: id,
+        action: action === 'approved' ? 'approve_anomaly' : 'reject_anomaly',
+        actor,
+        meta: {
+          bulk: true,
+          reason: reason || (action === 'approved' ? 'Bulk approved.' : 'Bulk rejected.'),
+          previousStatus: anomaly.status,
+          newStatus: action,
+        },
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Bulk ${action}: ${updated.length} updated, ${skipped.length} skipped.`,
+      data: { updated, skipped },
     });
   } catch (error) {
     next(error);

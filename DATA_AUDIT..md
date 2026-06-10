@@ -3,7 +3,7 @@
 ## 1. Data integrity check.
 
 - The csv comprise of 2702 rows.
-- Rows were the specified at the `ASSIGMENT.md`
+- COLUMNS were the specified at the `ASSIGMENT.md`
 - Did a time check integrity. Trying to find if there is any missing gap on dates. Table below suggest there my be two duplicates rows.
 
 ---

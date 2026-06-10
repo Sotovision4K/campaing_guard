@@ -14,3 +14,12 @@
 - For larger user based this is going to fail. We need to add queues to decouple the calculation and detection logic. That way we could deload the endpoint. 
 
 - There no rate limiting, any malicious attacket can ddos this endpoint
+
+- After testing features, a major red flag would be effort of the model. I set the effort model to low, so in production we would want to use a more powerfull model with a moderate effort. It make take a little longer, but if we include a queue, we can decouple the heeavy pipeline.
+
+- response takes around 20 seconds. Depending on customer SLA, this can affect UX.
+
+- After consideration, I'm not pre saving or caching the user response or anomaly detection, if db is down or fail. There's no retry mechanism for that.
+
+- another major red flag could be i'm not checking if the types are the correct one on the repositories endpoint. We can use zod for this.
+

@@ -1,289 +1,321 @@
-import { useState, useEffect } from 'react';
-import { useAnomalies } from '../../hooks/useAnomalies';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import {
+  listAnomalies,
+  approveAnomaly,
+  rejectAnomaly,
+  bulkActionAnomalies,
+  increaseBid as increaseBidRequest,
+  lowerBid as lowerBidRequest,
+} from '../../services/anomalies.service';
 import type { Anomaly } from '../../services/anomalies.service';
-import './index.css';
+import type { AnomalyWithStatus, AnomalyStatus } from '../../types/anomaly';
+import { TopBar } from '../../components/TopBar/TopBar';
+import { SummaryMetrics } from '../../components/SummaryMetrics/SummaryMetrics';
+import { CampaignTabs } from '../../components/CampaignTabs/CampaignTabs';
+import { AnomalyGroup } from '../../components/AnomalyGroup/AnomalyGroup';
+import { AnomalyDetail, AnomalyDetailEmpty } from '../../components/AnomalyDetail/AnomalyDetail';
+import { Top5Ranking } from '../../components/Top5Ranking/Top5Ranking';
+import { SeverityDonut } from '../../components/SeverityDonut/SeverityDonut';
+import styles from './Anomalies.module.css';
 
-interface ActionFeedback {
-  type: 'success' | 'error';
-  message: string;
-}
-
-export const AnomaliesPage = () => {
-  const {
-    status,
-    anomalies,
-    selectedAnomaly,
-    total,
-    error,
-    fetchAnomalies,
-    selectAnomaly,
-    reject,
-    approve,
-    increaseBid,
-    lowerBid,
-    clearSelection,
-  } = useAnomalies();
-
-  const [filterSeverity, setFilterSeverity] = useState<string>('');
-  const [filterStatus, setFilterStatus] = useState<string>('');
-  const [filterCampaign, setFilterCampaign] = useState<string>('');
-  const [actionReason, setActionReason] = useState('');
-  const [feedback, setFeedback] = useState<ActionFeedback | null>(null);
-
-  useEffect(() => {
-    fetchAnomalies({
-      campaignId: filterCampaign || undefined,
-      severity: filterSeverity || undefined,
-      status: filterStatus || undefined,
-    });
-  }, [filterSeverity, filterStatus, filterCampaign, fetchAnomalies]);
-
-  const handleSelectAnomaly = async (id: string) => {
-    setActionReason('');
-    setFeedback(null);
-    await selectAnomaly(id);
-  };
-
-  const handleReject = async () => {
-    if (!selectedAnomaly) return;
-    await reject(selectedAnomaly.anomaly.anomaly_id, actionReason || 'User rejected as false positive.');
-    setActionReason('');
-    setFeedback({ type: 'success', message: 'Anomaly rejected. DONE!' });
-  };
-
-  const handleApprove = async () => {
-    if (!selectedAnomaly) return;
-    await approve(selectedAnomaly.anomaly.anomaly_id, actionReason || 'User approved anomaly.');
-    setActionReason('');
-    setFeedback({ type: 'success', message: 'Anomaly approved. DONE!' });
-  };
-
-  const handleIncreaseBid = async () => {
-    if (!selectedAnomaly) return;
-    await increaseBid(selectedAnomaly.anomaly.anomaly_id);
-    setFeedback({ type: 'success', message: 'Bid increased. DONE!' });
-  };
-
-  const handleLowerBid = async () => {
-    if (!selectedAnomaly) return;
-    await lowerBid(selectedAnomaly.anomaly.anomaly_id);
-    setFeedback({ type: 'success', message: 'Bid lowered. DONE!' });
-  };
-
-  const severityColor: Record<string, string> = {
-    CRITICAL: 'severity-critical',
-    HIGH: 'severity-high',
-    MEDIUM: 'severity-medium',
-    LOW: 'severity-low',
-  };
-
-  const campaigns = [...new Set(anomalies.map(a => a.campaign_id))].sort();
-
-  return (
-    <div className="anomalies-page">
-      <header className="anomalies-page__header">
-        <h1>Anomalies</h1>
-        <p>Review and act on detected campaign anomalies.</p>
-      </header>
-
-      <div className="anomalies-page__filters">
-        <select
-          value={filterCampaign}
-          onChange={(e) => setFilterCampaign(e.target.value)}
-          aria-label="Filter by campaign"
-        >
-          <option value="">All Campaigns</option>
-          {campaigns.map((campaign) => (
-            <option key={campaign} value={campaign}>{campaign}</option>
-          ))}
-        </select>
-        <select
-          value={filterSeverity}
-          onChange={(e) => setFilterSeverity(e.target.value)}
-          aria-label="Filter by severity"
-        >
-          <option value="">All Severities</option>
-          <option value="CRITICAL">Critical</option>
-          <option value="HIGH">High</option>
-          <option value="MEDIUM">Medium</option>
-          <option value="LOW">Low</option>
-        </select>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          aria-label="Filter by status"
-        >
-          <option value="">All Statuses</option>
-          <option value="open">Open</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-          <option value="investigating">Investigating</option>
-          <option value="pending_insight">Pending Insight</option>
-        </select>
-        <span className="anomalies-page__count">Total: {total}</span>
-      </div>
-
-      {status === 'loading' && (
-        <div className="anomalies-page__loading">Loading anomalies...</div>
-      )}
-
-      {status === 'error' && (
-        <div className="anomalies-page__error" role="alert">
-          {error}
-          <button onClick={() => fetchAnomalies()}>Retry</button>
-        </div>
-      )}
-
-      <div className="anomalies-page__layout">
-        <div className="anomalies-page__list">
-          {anomalies.map((anomaly) => (
-            <AnomalyCard
-              key={anomaly.anomaly_id}
-              anomaly={anomaly}
-              isSelected={selectedAnomaly?.anomaly.anomaly_id === anomaly.anomaly_id}
-              severityClass={severityColor[anomaly.severity] || 'severity-low'}
-              onClick={() => handleSelectAnomaly(anomaly.anomaly_id)}
-            />
-          ))}
-          {anomalies.length === 0 && status !== 'loading' && (
-            <div className="anomalies-page__empty">No anomalies found.</div>
-          )}
-        </div>
-
-        {selectedAnomaly && (
-          <div className="anomalies-page__detail">
-            <div className="detail-header">
-              <h2>{selectedAnomaly.anomaly.label || selectedAnomaly.anomaly.anomaly_type}</h2>
-              <button className="detail-close" onClick={clearSelection} aria-label="Close details">
-                ×
-              </button>
-            </div>
-
-            <div className="detail-meta">
-              <span className={`badge ${severityColor[selectedAnomaly.anomaly.severity] || ''}`}>
-                {selectedAnomaly.anomaly.severity}
-              </span>
-              <span className={`badge status-${selectedAnomaly.anomaly.status}`}>
-                {selectedAnomaly.anomaly.status}
-              </span>
-              <span className="detail-campaign">Campaign: {selectedAnomaly.anomaly.campaign_id}</span>
-              <span className="detail-count">Count: {selectedAnomaly.anomaly.count}</span>
-            </div>
-
-            <div className="detail-dates">
-              {selectedAnomaly.anomaly.date && (
-                <span>Date: {selectedAnomaly.anomaly.date}</span>
-              )}
-              <span>Type: {selectedAnomaly.anomaly.anomaly_type}</span>
-            </div>
-
-            {selectedAnomaly.anomaly.feature_snapshot && (
-              <div className="detail-snapshot">
-                <h3>Details</h3>
-                <pre>{JSON.stringify(selectedAnomaly.anomaly.feature_snapshot, null, 2)}</pre>
-              </div>
-            )}
-
-            <div className="detail-actions">
-              <h3>Action</h3>
-              {feedback && (
-                <div className={`action-feedback action-feedback--${feedback.type}`}>
-                  {feedback.message}
-                </div>
-              )}
-              <textarea
-                placeholder="Reason for action..."
-                value={actionReason}
-                onChange={(e) => setActionReason(e.target.value)}
-                rows={2}
-                className="action-reason"
-              />
-
-              <div className="action-buttons">
-                <button
-                  className="btn btn--reject"
-                  onClick={handleReject}
-                  disabled={status === 'action-loading'}
-                >
-                  Reject
-                </button>
-                <button
-                  className="btn btn--approve"
-                  onClick={handleApprove}
-                  disabled={status === 'action-loading'}
-                >
-                  Approve
-                </button>
-              </div>
-
-              <div className="action-buttons action-buttons--bid">
-                <button
-                  className="btn btn--increase-bid"
-                  onClick={handleIncreaseBid}
-                  disabled={status === 'action-loading'}
-                >
-                  Increase Bid
-                </button>
-                <button
-                  className="btn btn--lower-bid"
-                  onClick={handleLowerBid}
-                  disabled={status === 'action-loading'}
-                >
-                  Lower Bid
-                </button>
-              </div>
-            </div>
-
-            {selectedAnomaly.auditLogs.length > 0 && (
-              <div className="detail-audit">
-                <h3>Audit Log</h3>
-                <ul className="audit-list">
-                  {selectedAnomaly.auditLogs.map((log) => (
-                    <li key={log.log_id} className="audit-item">
-                      <span className="audit-action">{log.action}</span>
-                      <span className="audit-actor">{log.actor}</span>
-                      <span className="audit-date">
-                        {new Date(log.created_at).toLocaleString()}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+const mapStatus = (status: Anomaly['status']): AnomalyStatus => {
+  if (status === 'approved' || status === 'rejected') return status;
+  return 'pending';
 };
 
-interface AnomalyCardProps {
-  anomaly: Anomaly;
-  isSelected: boolean;
-  severityClass: string;
-  onClick: () => void;
-}
+const inferScore = (anomaly: Anomaly): number => {
+  const base = Math.min(100, anomaly.count * 10);
+  const boost = anomaly.severity === 'CRITICAL' ? 30 : anomaly.severity === 'HIGH' ? 20 : 10;
+  return Math.min(100, base + boost);
+};
 
-const AnomalyCard = ({ anomaly, isSelected, severityClass, onClick }: AnomalyCardProps) => {
+const inferMetrics = (
+  snapshot: Record<string, unknown>
+): { acos: number; roas: number; spend: number } => {
+  return {
+    acos: Number(snapshot.acos ?? snapshot.ACoS ?? 0),
+    roas: Number(snapshot.roas ?? snapshot.ROAS ?? 0),
+    spend: Number(snapshot.spend ?? snapshot.Spend ?? 0),
+  };
+};
+
+const inferSignal = (type: string, snapshot: Record<string, unknown>): string => {
+  const acos = Number(snapshot.acos ?? snapshot.ACoS);
+  if (Number.isFinite(acos) && acos > 0) {
+    return `ACoS ${(acos * 100).toFixed(1)}%`;
+  }
+  return type.replace(/_/g, ' ');
+};
+
+const toAnomalyWithStatus = (a: Anomaly): AnomalyWithStatus => ({
+  id: a.anomaly_id,
+  campaignId: a.campaign_id,
+  date: a.date || '',
+  type: a.anomaly_type,
+  severity: a.severity,
+  title: a.label || a.anomaly_type.replace(/_/g, ' '),
+  insight: typeof a.feature_snapshot?.insight === 'string' ? a.feature_snapshot.insight : '',
+  description: typeof a.feature_snapshot?.description === 'string' ? a.feature_snapshot.description : '',
+  suggestedAction: typeof a.feature_snapshot?.action === 'string' ? a.feature_snapshot.action : '',
+  confidence: Number(a.feature_snapshot?.confidence ?? 0.5),
+  score: inferScore(a),
+  signal: inferSignal(a.anomaly_type, a.feature_snapshot),
+  metrics: inferMetrics(a.feature_snapshot),
+  metadata: a.feature_snapshot,
+  status: mapStatus(a.status),
+});
+
+export const AnomaliesPage = () => {
+  const [anomalies, setAnomalies] = useState<AnomalyWithStatus[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null);
+  const [selectedAnomalyId, setSelectedAnomalyId] = useState<string | null>(null);
+
+  const fetchAnomalies = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await listAnomalies({ limit: 200 });
+      setAnomalies(response.data.anomalies.map(toAnomalyWithStatus));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load anomalies');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const persistStatus = useCallback((id: string, status: AnomalyWithStatus['status']) => {
+    if (status === 'approved') void approveAnomaly(id);
+    else if (status === 'rejected') void rejectAnomaly(id);
+  }, []);
+
+  const persistStatusBulk = useCallback((ids: string[], status: AnomalyWithStatus['status']) => {
+    if (status === 'approved' || status === 'rejected') {
+      void bulkActionAnomalies(ids, status);
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAnomalies();
+  }, [fetchAnomalies]);
+
+  const groups = useMemo(() => {
+    const map = new Map<string, AnomalyWithStatus[]>();
+    anomalies.forEach((a) => {
+      const arr = map.get(a.campaignId) || [];
+      arr.push(a);
+      map.set(a.campaignId, arr);
+    });
+    const severityWeight = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 } as const;
+    return Array.from(map.entries())
+      .map(([campaignId, items]) => ({
+        campaignId,
+        anomalies: items,
+        topSeverity: items[0]?.severity || 'LOW',
+        pendingCount: items.filter((a) => a.status === 'pending').length,
+      }))
+      .sort((a, b) => severityWeight[a.topSeverity] - severityWeight[b.topSeverity]);
+  }, [anomalies]);
+
+  const metrics = useMemo(() => {
+    const total = anomalies.length;
+    const critical = anomalies.filter((a) => a.severity === 'CRITICAL').length;
+    const pending = anomalies.filter((a) => a.status === 'pending').length;
+    const resolved = total - pending;
+    return { total, critical, pending, resolved };
+  }, [anomalies]);
+
+  const top5 = useMemo(() => {
+    return [...anomalies]
+      .filter((a) => a.status === 'pending')
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+  }, [anomalies]);
+
+  const severityDistribution = useMemo(() => ({
+    CRITICAL: anomalies.filter((a) => a.severity === 'CRITICAL').length,
+    HIGH: anomalies.filter((a) => a.severity === 'HIGH').length,
+    MEDIUM: anomalies.filter((a) => a.severity === 'MEDIUM').length,
+  }), [anomalies]);
+
+  const visibleGroups = useMemo(() => {
+    if (activeCampaignId === null) return groups;
+    return groups.filter((g) => g.campaignId === activeCampaignId);
+  }, [groups, activeCampaignId]);
+
+  const selectedAnomaly = useMemo(() => {
+    if (!selectedAnomalyId) return null;
+    for (const group of groups) {
+      const found = group.anomalies.find((a) => a.id === selectedAnomalyId);
+      if (found) return found;
+    }
+    return null;
+  }, [groups, selectedAnomalyId]);
+
+  const handleStatusChange = useCallback((id: string, newStatus: AnomalyStatus) => {
+    setAnomalies((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, status: newStatus } : a))
+    );
+    persistStatus(id, newStatus);
+  }, [persistStatus]);
+
+  const handleStatusChangeBulk = useCallback((ids: string[], newStatus: AnomalyStatus) => {
+    const idSet = new Set(ids);
+    setAnomalies((prev) =>
+      prev.map((a) => (idSet.has(a.id) ? { ...a, status: newStatus } : a))
+    );
+    persistStatusBulk(ids, newStatus);
+  }, [persistStatusBulk]);
+
+  const handleTabChange = (id: string | null) => {
+    setActiveCampaignId(id);
+    setSelectedAnomalyId(null);
+  };
+
+  const handleApprove = (id: string) => handleStatusChange(id, 'approved');
+  const handleReject = (id: string) => handleStatusChange(id, 'rejected');
+  const handleUndo = (id: string) => handleStatusChange(id, 'pending');
+  const handleAnalyze = (id: string) => {
+    console.info(`Analyze anomaly ${id}`);
+  };
+  const handleIncreaseBid = (id: string, percent: number) => {
+    void increaseBidRequest(id, percent).then(() => {
+      setAnomalies((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, status: 'approved' as AnomalyStatus } : a))
+      );
+    });
+  };
+  const handleLowerBid = (id: string, percent: number) => {
+    void lowerBidRequest(id, percent).then(() => {
+      setAnomalies((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, status: 'approved' as AnomalyStatus } : a))
+      );
+    });
+  };
+  const handleExport = () => {
+    if (severityDistribution.CRITICAL === 0) {
+      console.info('No critical anomalies to summarize');
+      return;
+    }
+    console.info(`Generating LLM summary for ${severityDistribution.CRITICAL} critical anomalies`);
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <TopBar
+          filename="all-reports"
+          campaignCount={0}
+          anomalyCount={0}
+          onExport={handleExport}
+        />
+        <div className={styles.empty}>
+          <p>Loading anomalies...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.page}>
+        <TopBar
+          filename="error"
+          campaignCount={0}
+          anomalyCount={0}
+          onExport={handleExport}
+        />
+        <div className={styles.error}>
+          <p>{error}</p>
+          <button onClick={fetchAnomalies}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (groups.length === 0) {
+    return (
+      <div className={styles.page}>
+        <TopBar
+          filename="no-anomalies"
+          campaignCount={0}
+          anomalyCount={0}
+          onExport={handleExport}
+        />
+        <div className={styles.empty}>
+          <svg className={styles.emptyIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          <span>No anomalies found. Great job!</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={`anomaly-card ${isSelected ? 'anomaly-card--selected' : ''}`}
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onClick()}
-    >
-      <div className="anomaly-card__header">
-        <span className={`badge ${severityClass}`}>{anomaly.severity}</span>
-        <span className={`badge status-${anomaly.status}`}>{anomaly.status}</span>
+    <div className={styles.page}>
+      <TopBar
+        filename="all-reports"
+        campaignCount={groups.length}
+        anomalyCount={metrics.total}
+        onExport={handleExport}
+      />
+
+      <SummaryMetrics
+        total={metrics.total}
+        critical={metrics.critical}
+        pending={metrics.pending}
+        resolved={metrics.resolved}
+      />
+
+      <div className={styles.body}>
+        <div className={styles.left}>
+          <CampaignTabs
+            groups={groups}
+            activeCampaignId={activeCampaignId}
+            onSelect={handleTabChange}
+          />
+          <div className={styles.list}>
+            {visibleGroups.map((group) => (
+              <AnomalyGroup
+                key={group.campaignId}
+                group={group}
+                selectedId={selectedAnomalyId}
+                onSelect={setSelectedAnomalyId}
+                onApproveAll={(ids: string[]) => handleStatusChangeBulk(ids, 'approved')}
+                onRejectAll={(ids: string[]) => handleStatusChangeBulk(ids, 'rejected')}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.right}>
+          {selectedAnomaly ? (
+            <AnomalyDetail
+              anomaly={selectedAnomaly}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onUndo={handleUndo}
+              onAnalyze={handleAnalyze}
+              onIncreaseBid={handleIncreaseBid}
+              onLowerBid={handleLowerBid}
+            />
+          ) : (
+            <AnomalyDetailEmpty />
+          )}
+        </div>
       </div>
-      <div className="anomaly-card__title">
-        {anomaly.label || anomaly.anomaly_type}
-      </div>
-      <div className="anomaly-card__meta">
-        <span>{anomaly.campaign_id}</span>
-        {anomaly.date && <span>• {anomaly.date}</span>}
-        <span>• Count: {anomaly.count}</span>
+
+      <div className={styles.bottom}>
+        <Top5Ranking anomalies={top5} />
+        <SeverityDonut
+          critical={severityDistribution.CRITICAL}
+          high={severityDistribution.HIGH}
+          medium={severityDistribution.MEDIUM}
+        />
       </div>
     </div>
   );

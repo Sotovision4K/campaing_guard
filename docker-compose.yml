@@ -9,7 +9,7 @@ services:
       POSTGRES_DB: ${DB_NAME:-profasee}
       POSTGRES_USER: ${DB_USER:-profasee_user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-profasee_password}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
@@ -22,7 +22,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Backend API
+  # Backend API (dev mode: tsx watch, source mounted for live reload)
   backend:
     build:
       context: ./src/backend
@@ -30,10 +30,8 @@ services:
     container_name: profasee-api
     restart: unless-stopped
     env_file: .env
-    ports:
-      - "${API_PORT:-3001}:8080"
     environment:
-      NODE_ENV: ${NODE_ENV:-development}
+      NODE_ENV: development
       PORT: 8080
       DATABASE_URL: postgresql://${DB_USER:-profasee_user}:${DB_PASSWORD:-profasee_password}@postgres:5432/${DB_NAME:-profasee}
       DB_HOST: postgres
@@ -41,6 +39,10 @@ services:
       DB_NAME: ${DB_NAME:-profasee}
       DB_USER: ${DB_USER:-profasee_user}
       DB_PASSWORD: ${DB_PASSWORD:-profasee_password}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - "${API_PORT:-3001}:8080"
+      - "9229:9229"
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,11 +51,26 @@ services:
       - ./src/backend/tsconfig.json:/app/tsconfig.json
     networks:
       - profasee-network
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+
+  # Frontend (dev mode: Vite dev server with HMR + proxy to backend)
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: profasee-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-5173}:5173"
+    environment:
+      VITE_API_URL: /api/v1
+    depends_on:
+      - backend
+    volumes:
+      - ./src/frontend/src:/app/src
+      - ./src/frontend/index.html:/app/index.html
+      - ./src/frontend/vite.config.ts:/app/vite.config.ts
+    networks:
+      - profasee-network
 
 volumes:
   postgres_data:

@@ -12,31 +12,107 @@ src/backend/
 ├── tsconfig.json
 ├── vitest.config.ts
 └── src/
+    ├── app.ts
+    ├── controllers/
+    │   ├── anomaly.controller.ts
+    │   └── data.controller.ts
+    ├── db/
+    │   ├── index.ts
+    │   ├── models.ts
+    │   └── repositories/
+    │       ├── anomaly.repository.ts
+    │       ├── audit-log.repository.ts
+    │       └── report.repository.ts
     ├── interfaces/
-    │   └── csv-row.interface.ts
-    └── services/
-        ├── analytics-stage.service.ts
-        └── __tests__/
-            └── analytics-stage.service.test.ts
+    │   ├── csv-row.interface.ts
+    │   └── pipeline.interface.ts
+    ├── middleware/
+    │   ├── error-handler.ts
+    │   ├── errors.ts
+    │   └── request-id.ts
+    ├── prompts/
+    ├── routes/
+    │   ├── index.ts
+    │   ├── anomaly.routes.ts
+    │   ├── data.routes.ts
+    │   └── __tests__/
+    ├── services/
+    │   ├── analytics-stage.service.ts
+    │   ├── pipeline.service.ts
+    │   ├── __tests__/
+    │   └── stages/
+    │       ├── anomaly-detection.stage.ts
+    │       ├── data-quality.stage.ts
+    │       ├── llm-validation.stage.ts
+    │       ├── normalisation.stage.ts
+    │       ├── regime-detection.stage.ts
+    │       └── __tests__/
+    └── utils/
+        └── hash.ts
 ```
 
 ### Frontend Structure (`src/frontend`)
 ```
 src/frontend/
-├── api/
-│   └── client.ts              # Global API client (axios)
-├── hooks/
-│   └── useJobStatus.ts        # Global reusable hook
-├── services/
-│   ├── upload.service.ts      # dropzone page requests
-│   ├── anomalies.service.ts   # anomalies page requests
-│   └── insights.service.ts    # insights page requests
-├── pages/
-│   ├── dropzone/              # CSV upload view
-│   ├── anomalies/             # Anomaly display view
-│   └── insights/              # LLM insights view
-└── components/
-    └── Layout/
+├── public/
+└── src/
+    ├── App.module.css
+    ├── App.tsx
+    ├── main.tsx
+    ├── api/
+    │   └── client.ts                # Global API client (axios)
+    ├── assets/
+    │   ├── hero.png
+    │   ├── react.svg
+    │   └── vite.svg
+    ├── components/
+    │   ├── index.ts
+    │   ├── AnomalyDetail/
+    │   ├── AnomalyGroup/
+    │   ├── AnomalyRow/
+    │   ├── AnomalyTypeChart/
+    │   ├── CampaignList/
+    │   ├── CampaignTabs/
+    │   ├── PipelineProgress/
+    │   ├── SeverityBadge/
+    │   ├── SeverityBreakdown/
+    │   ├── SeverityDonut/
+    │   ├── SummaryCards/
+    │   ├── SummaryMetrics/
+    │   ├── Top5Ranking/
+    │   └── TopBar/
+    ├── hooks/
+    │   ├── useAnomalies.ts
+    │   ├── useAnomalyDashboard.test.ts
+    │   ├── useAnomalyDashboard.ts
+    │   ├── useCampaignAnomalies.ts
+    │   └── useUpload.ts
+    ├── pages/
+    │   ├── dropzone/                # CSV upload view
+    │   │   ├── Dropzone.tsx
+    │   │   ├── ResultsDashboard.module.css
+    │   │   ├── ResultsDashboard.tsx
+    │   │   ├── UploadProgress.tsx
+    │   │   ├── UploadResult.tsx
+    │   │   └── index.tsx
+    │   ├── anomalies/               # Anomaly display view
+    │   │   ├── Anomalies.module.css
+    │   │   └── index.tsx
+    │   └── insights/                # LLM insights view
+    │       ├── Insights.module.css
+    │       └── index.tsx
+    ├── services/
+    │   ├── anomalies.service.ts
+    │   └── upload.service.ts
+    ├── styles/
+    │   ├── dropzone.module.css
+    │   ├── global.css
+    │   └── upload-result.module.css
+    ├── test/
+    │   └── setup.ts
+    └── types/
+        ├── anomaly.ts
+        └── index.ts
 ```
 
 ### Data Flow

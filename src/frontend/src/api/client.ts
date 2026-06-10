@@ -1,11 +1,24 @@
 import axios, { type AxiosInstance, type AxiosError } from 'axios';
+import { fromApiError, NetworkError, type ApiErrorPayload } from './errors.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
-export interface ApiError {
-  code: string;
-  message: string;
-}
+export type { ApiErrorPayload } from './errors.js';
+export { fromApiError, NetworkError } from './errors.js';
+export {
+  ApiError,
+  LLMError,
+  DBError,
+  ValidationError,
+  NotFoundError,
+  FileProcessingError,
+  ConfigurationError,
+  UnknownApiError,
+  isApiError,
+  isLLMError,
+  isDBError,
+  isNetworkError,
+} from './errors.js';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -21,17 +34,15 @@ export const apiClient: AxiosInstance = axios.create({
   },
 });
 
-// Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ error: ApiError }>) => {
+  (error: AxiosError<{ error: ApiErrorPayload }>) => {
     if (error.response?.data?.error) {
-      return Promise.reject(error.response.data.error);
+      return Promise.reject(fromApiError(error.response.data.error));
     }
-    return Promise.reject({
-      code: 'NETWORK_ERROR',
-      message: error.message || 'Network error occurred',
-    });
+    return Promise.reject(
+      new NetworkError(error.message || 'Network error occurred')
+    );
   }
 );
 

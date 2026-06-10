@@ -8,6 +8,7 @@ import {
   approveAnomaly,
   increaseBid,
   lowerBid,
+  bulkAction,
   listAuditLogs,
 } from '../controllers/anomaly.controller.js';
 
@@ -41,6 +42,9 @@ router.post('/:id/increase-bid', increaseBid);
 
 // Lower bid action
 router.post('/:id/lower-bid', lowerBid);
+
+// Bulk approve / reject a list of anomalies
+router.post('/bulk-action', bulkAction);
 
 // Audit logs
 router.get('/audit-logs', listAuditLogs);

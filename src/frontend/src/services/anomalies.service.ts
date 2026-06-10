@@ -111,6 +111,18 @@ export const lowerBid = async (
   return response.data;
 };
 
+export const bulkActionAnomalies = async (
+  ids: string[],
+  action: 'approved' | 'rejected',
+  reason?: string
+): Promise<ApiResponse<{ updated: Anomaly[]; skipped: string[] }>> => {
+  const response = await apiClient.post<ApiResponse<{ updated: Anomaly[]; skipped: string[] }>>(
+    `/anomaly/bulk-action`,
+    { ids, action, reason }
+  );
+  return response.data;
+};
+
 export const listAuditLogs = async (
   filters?: {
     anomalyId?: string;

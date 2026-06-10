@@ -1,0 +1,98 @@
+.row {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  transition: all 0.15s ease;
+}
+
+.row:hover {
+  background: var(--color-bg-elevated);
+  border-color: var(--color-border-strong);
+}
+
+.selected {
+  background: var(--color-accent-primary-muted);
+  border-color: var(--color-accent-primary);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dotCritical { background: #E24B4A; }
+.dotHigh { background: #EF9F27; }
+.dotMedium { background: #378ADD; }
+.dotLow { background: var(--color-accent-primary); }
+
+.name {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.signal {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-family: var(--font-family-mono, monospace);
+  white-space: nowrap;
+}
+
+.statusSlot {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badgeCritical { background: #FCEBEB; color: #A32D2D; }
+.badgeHigh { background: #FAEEDA; color: #854F0B; }
+.badgeMedium { background: #E6F1FB; color: #185FA5; }
+.badgeLow { background: var(--color-accent-primary-muted); color: var(--color-accent-primary); }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.chipApproved {
+  background: var(--color-accent-primary-muted);
+  color: var(--color-accent-primary);
+  border: 1px solid var(--color-accent-primary);
+}
+
+.chipRejected {
+  background: #FCEBEB;
+  color: #A32D2D;
+  border: 1px solid #E24B4A;
+}

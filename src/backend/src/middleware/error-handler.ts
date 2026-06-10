@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
-import { AppError } from './errors.js';
+import { AppError, LLMError } from './errors.js';
 
 export const errorHandler: ErrorRequestHandler = (
   err: Error,
@@ -8,16 +8,23 @@ export const errorHandler: ErrorRequestHandler = (
   _next: NextFunction
 ): void => {
   if (err instanceof AppError) {
-    res.status(err.statusCode).json({
-      error: {
-        code: err.code,
-        message: err.message,
-      },
-    });
+    if (!err.isOperational) {
+      console.error(`[non-operational ${err.code}]`, err);
+      if ((err as { cause?: unknown }).cause) {
+        console.error('Cause:', (err as { cause?: unknown }).cause);
+      }
+    }
+    const body: Record<string, unknown> = {
+      code: err.code,
+      message: err.message,
+    };
+    if (err instanceof LLMError) {
+      body.retryable = err.retryable;
+    }
+    res.status(err.statusCode).json({ error: body });
     return;
   }
 
-  // Log unexpected errors
   console.error('Unexpected error:', err);
 
   res.status(500).json({

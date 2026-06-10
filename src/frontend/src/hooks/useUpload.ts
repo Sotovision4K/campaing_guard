@@ -94,13 +94,15 @@ export const useUpload = () => {
         error: null,
       });
 
+      const reportId = response.data?.report?.id;
+
       if (isCached) {
         setState((prev) => ({ ...prev, status: 'waiting' }));
         setTimeout(() => {
-          navigate('/insights', { state: { uploadData: response.data } });
+          navigate('/insights', { state: { reportId } });
         }, 1500);
       } else {
-        navigate('/insights', { state: { uploadData: response.data } });
+        navigate('/insights', { state: { reportId } });
       }
 
       return response;

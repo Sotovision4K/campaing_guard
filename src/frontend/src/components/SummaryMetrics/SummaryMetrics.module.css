@@ -1,0 +1,73 @@
+.row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+}
+
+.value {
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.label {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.default .value {
+  color: var(--color-text-primary);
+}
+
+.critical {
+  background: #FCEBEB;
+  border-color: #FBD5D5;
+}
+.critical .value {
+  color: #A32D2D;
+}
+.critical .label {
+  color: #A32D2D;
+}
+
+.pending {
+  background: #FAEEDA;
+  border-color: #F5DEB8;
+}
+.pending .value {
+  color: #854F0B;
+}
+.pending .label {
+  color: #854F0B;
+}
+
+.resolved {
+  background: var(--color-accent-primary-muted);
+  border-color: rgba(0, 229, 160, 0.25);
+}
+.resolved .value {
+  color: var(--color-accent-primary);
+}
+.resolved .label {
+  color: var(--color-accent-primary);
+}
+
+@media (max-width: 768px) {
+  .row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

@@ -13,6 +13,11 @@ import {
   LLM_MODEL_DEEP_INSIGHT,
   SEVERITY_WEIGHT,
 } from '../../interfaces/pipeline.interface.js';
+import {
+  LLMError,
+  LLMConfigError,
+  LLMResponseParseError,
+} from '../../middleware/errors.js';
 
 const ANOMALY_VALIDATION_PROMPT = `You are an Amazon PPC anomaly validator. The finding object already contains id, campaignId, date, type, and severity. Only return enriched fields.
 
@@ -211,7 +216,7 @@ async function callAnthropicWithRetry(
       logger.info(`Anthropic response received. Usage: inputTokens=${response.usage?.input_tokens}, outputTokens=${response.usage?.output_tokens}`);
       const textContent = response.content.find(c => c.type === 'text');
       if (!textContent || textContent.type !== 'text') {
-        throw new Error('No text content in response');
+        throw new LLMResponseParseError('Anthropic response had no text content');
       }
 
       const rawText = textContent.text;
@@ -225,7 +230,10 @@ async function callAnthropicWithRetry(
         logger.error('Failed to parse Anthropic response as JSON. Extracted text:', jsonText.slice(0, 500));
         logger.error("Reason for parse failure:", parseError instanceof Error ? parseError.message : String(parseError));
         logger.error("Reason for stop:", response.stop_reason);
-        throw new Error(`Anthropic response JSON parse error: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+        throw new LLMResponseParseError(
+          `Anthropic response JSON parse error: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+          { cause: parseError }
+        );
       }
 
       return {
@@ -247,6 +255,15 @@ async function callAnthropicWithRetry(
         continue;
       }
 
+      if (status === 408 || status === 504 || status === 524) {
+        lastError = new LLMError(
+          `Anthropic request timed out: ${(error as Error).message ?? ''}`.trim(),
+          { cause: error, code: 'LLM_TIMEOUT', statusCode: 504 }
+        );
+      } else {
+        lastError = error as Error;
+      }
+
       // For other errors, retry with backoff
       if (attempt < maxRetries - 1) {
         await sleep(backoffMs);
@@ -256,9 +273,12 @@ async function callAnthropicWithRetry(
   }
 
   // All retries failed, log and throw so the caller can fallback
-  const finalError = lastError || new Error('LLM validation failed after retries');
+  const finalError = lastError || new LLMError('LLM validation failed after retries', { retryable: false });
   logger.error('LLM validation failed after max retries', finalError.message);
-  throw finalError;
+  throw new LLMError('LLM validation failed after retries', {
+    cause: finalError,
+    retryable: false,
+  });
 }
 
 export async function runLLMValidationStage(
@@ -275,7 +295,7 @@ export async function runLLMValidationStage(
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY environment variable is not set');
+    throw new LLMConfigError('ANTHROPIC_API_KEY environment variable is not set');
   }
   const client = new Anthropic({ apiKey });
 
