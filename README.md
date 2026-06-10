@@ -9,49 +9,54 @@
                  P R O J E C T :   C A M P A I G N   G U A R D I A N
 ```
 
+```
 +--------------------------------------------------------------+
-| |
-| CSV Upload |
-| | |
-| v |
-| [Parse & Validate] --> 7 validation rules |
-| | |
-| v |
-| [Data Quality] |
-| | |
-| v |
-| [Normalisation] |
-| | |
-| v |
-| [Regime Detection] |
-| | |
-| v |
-| [Anomaly Detection] --> 4 detectors |
-| | |
-| v |
-| [LLM Validation] --> Anthropic Haiku 4.5 (batches of 5) |
-| | |
-| v |
-| [Persist] --> reports / anomalies / audit_logs |
-| | |
-| v |
-| /anomalies + /insights |
-| |
+|                                                              |
+|   CSV Upload                                                 |
+|       |                                                      |
+|       v                                                      |
+|   [Parse & Validate]  -->  7 validation rules                |
+|       |                                                      |
+|       v                                                      |
+|   [Data Quality]                                             |
+|       |                                                      |
+|       v                                                      |
+|   [Normalisation]                                            |
+|       |                                                      |
+|       v                                                      |
+|   [Regime Detection]                                         |
+|       |                                                      |
+|       v                                                      |
+|   [Anomaly Detection]  -->  4 detectors                      |
+|       |                                                      |
+|       v                                                      |
+|   [LLM Validation]   -->  Anthropic Haiku 4.5 (batches of 5) |
+|       |                                                      |
+|       v                                                      |
+|   [Persist]            -->  reports / anomalies / audit_logs  |
+|       |                                                      |
+|       v                                                      |
+|   /anomalies  +  /insights                                   |
+|                                                              |
 +--------------------------------------------------------------+
-.------. .------. .------.
-CSV ----> |Parse | ----> |Quality| ----> |Norm |
-'------' '------' '------'
-|
-v
-.------. .------. .------.
-|Persist| <--- | LLM | <---- |Anomaly|
-'------' '------' '------'
-| ^
-v |
-Postgres Anthropic
-(anomalies (batches
-reports of 5)
-audit_logs)
+```
+
+```
+            .------.        .------.        .------.
+  CSV ----> |Parse | ----> |Quality| ----> |Norm  |
+            '------'        '------'        '------'
+                                                |
+                                                v
+            .------.        .------.        .------.
+            |Persist| <--- | LLM  | <---- |Anomaly|
+            '------'        '------'        '------'
+                |                ^
+                v                |
+            Postgres       Anthropic
+            (anomalies      (batches
+             reports         of 5)
+             audit_logs)
+```
 
 - Pipeline that ingest a csv and perform calculation. Detecting anomalies based on PPC metrics and each campaing baseline.
 
